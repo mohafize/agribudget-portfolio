@@ -1,0 +1,1762 @@
+<!doctype html>
+<html lang="en" dir="ltr"><head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="استكشف AgriBudget، تطبيقًا لتتبع المصروفات والإيرادات للمزارع الصغيرة. تُحفظ البيانات محليًا وبصورة مستقلة على كل جهاز.">
+    <meta name="color-scheme" content="light">
+    <title>AgriBudget | متتبع المصروفات والإيرادات للمزارع الصغيرة</title>
+    <style>
+      :root {
+        --paper: #f5f4ee;
+        --surface: #ffffff;
+        --surface-soft: #edf3ed;
+        --ink: #17241e;
+        --muted: #5f6d65;
+        --green-950: #0f3625;
+        --green-800: #185b3b;
+        --green-700: #24734c;
+        --green-100: #dceadd;
+        --amber: #e3ad45;
+        --amber-soft: #fff4da;
+        --line: #dce2dc;
+        --danger-soft: #f8e9e4;
+        --danger: #8b3f2e;
+        --shadow: 0 20px 50px rgba(20, 53, 37, 0.1);
+        --radius-lg: 32px;
+        --radius-md: 22px;
+        --radius-sm: 14px;
+        --max: 1180px;
+      }
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        min-width: 320px;
+        background:
+          radial-gradient(circle at 12% 4%, rgba(227, 173, 69, 0.16), transparent 26rem),
+          var(--paper);
+        color: var(--ink);
+        font-family: Tahoma, Arial, "Segoe UI", sans-serif;
+        line-height: 1.8;
+        text-rendering: optimizeLegibility;
+      }
+
+      img {
+        display: block;
+        max-width: 100%;
+      }
+
+      a {
+        color: inherit;
+      }
+
+      a:focus-visible {
+        outline: 3px solid var(--amber);
+        outline-offset: 4px;
+      }
+
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+
+      .skip-link {
+        position: fixed;
+        inset-block-start: 12px;
+        inset-inline-start: 12px;
+        z-index: 50;
+        padding: 10px 16px;
+        border-radius: 10px;
+        background: var(--surface);
+        color: var(--green-950);
+        transform: translateY(-150%);
+      }
+
+      .skip-link:focus {
+        transform: translateY(0);
+      }
+
+      .wrap {
+        width: min(calc(100% - 40px), var(--max));
+        margin-inline: auto;
+      }
+
+      .hero {
+        position: relative;
+        overflow: hidden;
+        padding-block: 26px 72px;
+        background: var(--green-950);
+        color: #fff;
+      }
+
+      .hero::before,
+      .hero::after {
+        content: "";
+        position: absolute;
+        border-radius: 999px;
+        pointer-events: none;
+      }
+
+      .hero::before {
+        width: 430px;
+        height: 430px;
+        inset-block-start: -250px;
+        inset-inline-start: -90px;
+        border: 1px solid rgba(255, 255, 255, 0.13);
+        box-shadow: 0 0 0 72px rgba(255, 255, 255, 0.035), 0 0 0 145px rgba(255, 255, 255, 0.025);
+      }
+
+      .hero::after {
+        width: 300px;
+        height: 300px;
+        inset-block-end: -210px;
+        inset-inline-end: 13%;
+        background: rgba(227, 173, 69, 0.12);
+      }
+
+      .topbar {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+        padding-block-end: 54px;
+      }
+
+      .brand {
+        direction: ltr;
+        font-family: "Segoe UI", Arial, sans-serif;
+        font-size: clamp(1.3rem, 2vw, 1.75rem);
+        font-weight: 750;
+        letter-spacing: -0.04em;
+      }
+
+      .brand-lockup {
+        display: inline-flex;
+        align-items: center;
+        gap: 13px;
+        direction: ltr;
+      }
+
+      .creator-mark {
+        padding-inline-start: 13px;
+        border-inline-start: 1px solid rgba(255, 255, 255, 0.24);
+        color: rgba(255, 255, 255, 0.62);
+        font-family: "Segoe UI", Arial, sans-serif;
+        font-size: 0.67rem;
+        font-weight: 800;
+        letter-spacing: 0.18em;
+        line-height: 1;
+      }
+
+      .status-chip,
+      .tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border-radius: 999px;
+      }
+
+      .status-chip {
+        padding: 7px 13px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: rgba(255, 255, 255, 0.78);
+        font-size: 0.82rem;
+      }
+
+      .status-chip::before {
+        content: "";
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--amber);
+        box-shadow: 0 0 0 4px rgba(227, 173, 69, 0.14);
+      }
+
+      .hero-grid {
+        position: relative;
+        z-index: 1;
+        display: grid;
+        grid-template-columns: minmax(0, 1.4fr) minmax(310px, 0.78fr);
+        align-items: center;
+        gap: clamp(36px, 7vw, 92px);
+      }
+
+      .eyebrow {
+        margin: 0 0 12px;
+        color: var(--green-700);
+        font-size: 0.82rem;
+        font-weight: 800;
+        letter-spacing: 0.04em;
+      }
+
+      .hero .eyebrow {
+        color: #b8d6c3;
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin-block-start: 0;
+      }
+
+      h1 {
+        max-width: 720px;
+        margin-block-end: 20px;
+        font-size: clamp(2.25rem, 5vw, 4.65rem);
+        font-weight: 760;
+        line-height: 1.22;
+        letter-spacing: -0.035em;
+      }
+
+      .hero-copy {
+        max-width: 690px;
+        margin-block-end: 28px;
+        color: rgba(255, 255, 255, 0.75);
+        font-size: clamp(1rem, 1.7vw, 1.18rem);
+      }
+
+      .tag-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 9px;
+      }
+
+      .tag {
+        padding: 7px 13px;
+        background: rgba(255, 255, 255, 0.09);
+        color: rgba(255, 255, 255, 0.84);
+        font-size: 0.85rem;
+      }
+
+      .truth-card {
+        position: relative;
+        padding: clamp(24px, 4vw, 38px);
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        border-radius: var(--radius-lg);
+        background: linear-gradient(145deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.055));
+        box-shadow: 0 24px 60px rgba(0, 0, 0, 0.2);
+        backdrop-filter: blur(8px);
+      }
+
+      .truth-card::after {
+        content: "";
+        position: absolute;
+        width: 110px;
+        height: 110px;
+        inset-block-start: -58px;
+        inset-inline-end: -40px;
+        border-radius: 50%;
+        background: var(--amber);
+        opacity: 0.72;
+      }
+
+      .truth-card h2 {
+        margin-block-end: 12px;
+        font-size: clamp(1.55rem, 3vw, 2.2rem);
+        line-height: 1.35;
+      }
+
+      .truth-card > p:not(.eyebrow) {
+        color: rgba(255, 255, 255, 0.72);
+      }
+
+      .device-state {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-block-start: 25px;
+      }
+
+      .device-state div {
+        padding: 13px 15px;
+        border-radius: 14px;
+        background: rgba(0, 0, 0, 0.16);
+      }
+
+      .device-state span,
+      .device-state strong {
+        display: block;
+      }
+
+      .device-state span {
+        color: rgba(255, 255, 255, 0.55);
+        font-size: 0.78rem;
+      }
+
+      .device-state strong {
+        margin-block-start: 2px;
+        color: #fff;
+        font-size: 0.95rem;
+      }
+
+      main {
+        overflow: hidden;
+      }
+
+      .section {
+        padding-block: clamp(70px, 9vw, 120px);
+      }
+
+      .section + .section {
+        border-block-start: 1px solid rgba(23, 36, 30, 0.08);
+      }
+
+      .section-heading {
+        max-width: 780px;
+        margin-block-end: 42px;
+      }
+
+      .section-heading h2 {
+        margin-block-end: 12px;
+        font-size: clamp(2rem, 4vw, 3.4rem);
+        line-height: 1.25;
+        letter-spacing: -0.04em;
+      }
+
+      .section-heading p:last-child {
+        margin-block-end: 0;
+        color: var(--muted);
+      }
+
+      .problem-grid {
+        display: grid;
+        grid-template-columns: 0.95fr 1.05fr;
+        gap: 20px;
+      }
+
+      .story-card,
+      .capability-card,
+      .metric,
+      .tech-item,
+      .figure-card,
+      .final-card {
+        border: 1px solid var(--line);
+        background: var(--surface);
+      }
+
+      .story-card {
+        min-height: 265px;
+        padding: clamp(28px, 4vw, 44px);
+        border-radius: var(--radius-md);
+      }
+
+      .story-card:first-child {
+        background: var(--amber-soft);
+        border-color: #efd89f;
+      }
+
+      .story-number {
+        display: grid;
+        place-items: center;
+        width: 38px;
+        height: 38px;
+        margin-block-end: 48px;
+        border-radius: 50%;
+        background: var(--green-950);
+        color: #fff;
+        direction: ltr;
+        font-size: 0.82rem;
+        font-weight: 700;
+      }
+
+      .story-card h3 {
+        margin-block-end: 12px;
+        font-size: 1.45rem;
+      }
+
+      .story-card p {
+        margin-block-end: 0;
+        color: var(--muted);
+      }
+
+      .capabilities {
+        background: #ecefe9;
+      }
+
+      .capability-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+      }
+
+      .capability-card {
+        padding: clamp(26px, 4vw, 42px);
+        border-radius: var(--radius-md);
+      }
+
+      .capability-card.no {
+        background: #f7f9f6;
+        border-color: #d5ddd6;
+      }
+
+      .capability-card h3 {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-block-end: 24px;
+        font-size: 1.4rem;
+      }
+
+      .capability-card h3::before {
+        content: "✓";
+        display: grid;
+        place-items: center;
+        flex: 0 0 auto;
+        width: 33px;
+        height: 33px;
+        border-radius: 50%;
+        background: var(--green-100);
+        color: var(--green-800);
+        font-size: 0.9rem;
+      }
+
+      .capability-card.no h3::before {
+        content: "•";
+        background: #e7ece8;
+        color: #4f6257;
+      }
+
+      .clean-list {
+        display: grid;
+        gap: 12px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .clean-list li {
+        position: relative;
+        padding-inline-start: 22px;
+        color: #44534b;
+      }
+
+      .clean-list li::before {
+        content: "";
+        position: absolute;
+        width: 6px;
+        height: 6px;
+        inset-block-start: 0.72em;
+        inset-inline-start: 2px;
+        border-radius: 50%;
+        background: var(--green-700);
+      }
+
+      .capability-card.no .clean-list li::before {
+        background: #718079;
+      }
+
+      .local-alert {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 20px;
+        align-items: center;
+        margin-block-start: 24px;
+        padding: 24px 28px;
+        border: 1px solid #c9d8cc;
+        border-radius: var(--radius-md);
+        background: #f1f6f1;
+      }
+
+      .alert-mark {
+        display: grid;
+        place-items: center;
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: var(--green-100);
+        color: var(--green-800);
+        font-size: 1.25rem;
+        font-weight: 900;
+      }
+
+      .local-alert strong,
+      .local-alert span {
+        display: block;
+      }
+
+      .local-alert strong {
+        margin-block-end: 3px;
+      }
+
+      .local-alert span {
+        color: #475a50;
+      }
+
+      .download-section {
+        background: linear-gradient(180deg, #f7f8f3 0%, var(--paper) 100%);
+      }
+
+      .download-panel {
+        padding: clamp(26px, 5vw, 52px);
+        border: 1px solid #cfdacf;
+        border-radius: var(--radius-lg);
+        background: var(--surface);
+        box-shadow: var(--shadow);
+      }
+
+      .download-actions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      .download-button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        min-height: 58px;
+        padding: 14px 20px;
+        border: 2px solid var(--green-800);
+        border-radius: 16px;
+        background: var(--green-800);
+        color: #fff;
+        font-weight: 800;
+        line-height: 1.35;
+        text-align: center;
+        text-decoration: none;
+        transition: background 160ms ease, border-color 160ms ease, color 160ms ease, transform 160ms ease;
+      }
+
+      .download-button:last-child {
+        border-color: var(--amber);
+        background: var(--amber);
+        color: var(--green-950);
+      }
+
+      .download-button:hover {
+        border-color: var(--green-950);
+        background: var(--green-950);
+        transform: translateY(-2px);
+      }
+
+      .download-button:last-child:hover {
+        border-color: #c98e23;
+        background: #f0bc56;
+      }
+
+      .download-button svg {
+        flex: 0 0 auto;
+        width: 22px;
+        height: 22px;
+        fill: currentColor;
+      }
+
+      .release-links {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 8px 22px;
+        margin-block: 20px 0;
+        padding-block-start: 20px;
+        border-block-start: 1px solid var(--line);
+      }
+
+      .release-link {
+        color: var(--green-800);
+        font-size: 0.93rem;
+        font-weight: 700;
+        text-underline-offset: 4px;
+        text-decoration-thickness: 1px;
+      }
+
+      .release-link:hover {
+        color: var(--green-950);
+        text-decoration-thickness: 2px;
+      }
+
+      .download-guidance {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+        margin-block-start: 28px;
+      }
+
+      .guidance-card {
+        padding: 22px 24px;
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        background: #f7f9f6;
+      }
+
+      .guidance-card h3 {
+        margin-block-end: 10px;
+        color: var(--green-950);
+        font-size: 1.12rem;
+      }
+
+      .guidance-card ul {
+        display: grid;
+        gap: 7px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .guidance-card li {
+        position: relative;
+        padding-inline-start: 17px;
+        color: #4a5b52;
+        font-size: 0.93rem;
+      }
+
+      .guidance-card li::before {
+        content: "";
+        position: absolute;
+        width: 5px;
+        height: 5px;
+        inset-block-start: 0.72em;
+        inset-inline-start: 1px;
+        border-radius: 50%;
+        background: var(--amber);
+      }
+
+      .download-note {
+        margin: 18px 0 0;
+        padding: 16px 18px;
+        border-radius: 14px;
+        background: var(--amber-soft);
+        color: #5c523d;
+        font-size: 0.92rem;
+      }
+
+      .metrics {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 14px;
+        margin-block-end: 20px;
+      }
+
+      .metric {
+        padding: 25px;
+        border-radius: var(--radius-md);
+      }
+
+      .metric strong {
+        display: block;
+        margin-block-end: 3px;
+        color: var(--green-800);
+        direction: ltr;
+        font-size: clamp(1.8rem, 4vw, 2.75rem);
+        line-height: 1.2;
+      }
+
+      .metric span {
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+
+      .tech-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 14px;
+      }
+
+      .tech-item {
+        padding: 24px 25px;
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow);
+      }
+
+      .tech-item span,
+      .tech-item strong {
+        display: block;
+      }
+
+      .tech-item span {
+        margin-block-end: 9px;
+        color: var(--muted);
+        font-size: 0.8rem;
+      }
+
+      .tech-item strong {
+        direction: ltr;
+        color: var(--green-950);
+        font-family: "Segoe UI", Arial, sans-serif;
+        font-size: 1.25rem;
+      }
+
+      .achievement-note {
+        max-width: 850px;
+        margin: 30px 0 0;
+        color: var(--muted);
+      }
+
+      .gallery-section {
+        background: var(--green-950);
+        color: #fff;
+      }
+
+      .gallery-section .eyebrow {
+        color: #b8d6c3;
+      }
+
+      .gallery-section .section-heading p:last-child {
+        color: rgba(255, 255, 255, 0.64);
+      }
+
+      .desktop-gallery {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+
+      .figure-card {
+        overflow: hidden;
+        margin: 0;
+        border-color: rgba(255, 255, 255, 0.14);
+        border-radius: var(--radius-md);
+        background: rgba(255, 255, 255, 0.06);
+      }
+
+      .shot-shell {
+        padding: 12px;
+        background: #0a0e0c;
+      }
+
+      .shot-shell img {
+        width: 100%;
+        height: auto;
+        aspect-ratio: 32 / 17;
+        object-fit: contain;
+        border-radius: 10px;
+      }
+
+      .figure-card figcaption {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 15px;
+        padding: 17px 20px 19px;
+      }
+
+      .figure-card figcaption strong,
+      .figure-card figcaption span {
+        display: block;
+      }
+
+      .figure-card figcaption span {
+        color: rgba(255, 255, 255, 0.76);
+        font-size: 0.84rem;
+      }
+
+      .figure-index {
+        flex: 0 0 auto;
+        direction: ltr;
+        color: var(--amber) !important;
+        font-weight: 700;
+      }
+
+      .phone-grid {
+        display: grid;
+        grid-template-columns: 0.9fr 1.1fr;
+        align-items: center;
+        gap: clamp(40px, 9vw, 120px);
+      }
+
+      .phone-copy h2 {
+        margin-block-end: 18px;
+        font-size: clamp(2rem, 4vw, 3.4rem);
+        line-height: 1.25;
+        letter-spacing: -0.04em;
+      }
+
+      .phone-copy > p:not(.eyebrow) {
+        color: var(--muted);
+      }
+
+      .phone-note {
+        margin-block-start: 28px;
+        padding: 18px 20px;
+        border-inline-start: 4px solid var(--green-700);
+        border-radius: 12px;
+        background: var(--surface-soft);
+        color: #3e5147;
+      }
+
+      .phone-visual {
+        position: relative;
+        display: grid;
+        place-items: center;
+        min-height: 700px;
+      }
+
+      .phone-visual::before {
+        content: "";
+        position: absolute;
+        width: min(500px, 100%);
+        aspect-ratio: 1;
+        border-radius: 50%;
+        background: var(--green-100);
+      }
+
+      .phone-frame {
+        position: relative;
+        overflow: hidden;
+        width: min(310px, 72vw);
+        padding: 10px;
+        border: 7px solid #12231c;
+        border-radius: 38px;
+        background: #12231c;
+        box-shadow: 0 35px 70px rgba(20, 53, 37, 0.24);
+      }
+
+      .phone-frame::before {
+        content: "";
+        position: absolute;
+        z-index: 2;
+        width: 34%;
+        height: 18px;
+        inset-block-start: 5px;
+        left: 50%;
+        border-radius: 0 0 13px 13px;
+        background: #12231c;
+        transform: translateX(-50%);
+      }
+
+      .phone-frame img {
+        width: 100%;
+        height: auto;
+        object-fit: contain;
+        border-radius: 25px;
+      }
+
+      .creator-section {
+        background: #ecefe9;
+      }
+
+      .creator-card {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        align-items: stretch;
+        gap: 20px;
+      }
+
+      .creator-profile,
+      .contact-panel {
+        min-width: 0;
+        padding: clamp(28px, 5vw, 52px);
+        border: 1px solid var(--line);
+        border-radius: var(--radius-lg);
+      }
+
+      .creator-profile {
+        background: var(--surface);
+        box-shadow: var(--shadow);
+      }
+
+      .creator-signature {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-block-end: 20px;
+        color: var(--green-700);
+        direction: ltr;
+        font-family: "Segoe UI", Arial, sans-serif;
+        font-size: 0.76rem;
+        font-weight: 850;
+        letter-spacing: 0.2em;
+      }
+
+      .creator-signature::after {
+        content: "";
+        width: 38px;
+        height: 2px;
+        background: var(--amber);
+      }
+
+      .creator-copy h3 {
+        margin-block-end: 8px;
+        color: var(--green-950);
+        font-size: clamp(1.55rem, 3vw, 2.35rem);
+        line-height: 1.35;
+      }
+
+      .creator-role {
+        margin-block-end: 10px;
+        color: var(--green-800);
+        font-weight: 750;
+        line-height: 1.65;
+      }
+
+      .creator-subtitle {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        margin-block-end: 22px;
+        padding: 5px 11px;
+        border-radius: 999px;
+        background: var(--amber-soft);
+        color: #65552e;
+        font-size: 0.82rem;
+        font-weight: 700;
+      }
+
+      .creator-bio {
+        max-width: 760px;
+        margin-block-end: 20px;
+        color: var(--muted);
+      }
+
+      .creator-location {
+        display: flex;
+        align-items: baseline;
+        flex-wrap: wrap;
+        gap: 4px 12px;
+        margin: 0;
+      }
+
+      .creator-location span {
+        color: var(--muted);
+        font-size: 0.78rem;
+        font-weight: 700;
+      }
+
+      .creator-location bdi {
+        color: var(--ink);
+        font-weight: 700;
+        unicode-bidi: isolate;
+      }
+
+      .creator-english {
+        margin-block-start: 30px;
+        padding-block-start: 30px;
+        border-block-start: 1px solid var(--line);
+        direction: ltr;
+        text-align: left;
+        unicode-bidi: isolate;
+      }
+
+      .creator-english h3 {
+        font-size: clamp(1.25rem, 2.4vw, 1.8rem);
+        overflow-wrap: anywhere;
+      }
+
+      .contact-panel {
+        display: flex;
+        flex-direction: column;
+        background: var(--surface-soft);
+        font-style: normal;
+      }
+
+      .contact-panel h3 {
+        margin-block-end: 10px;
+        color: var(--green-950);
+        font-size: clamp(1.4rem, 2.8vw, 1.9rem);
+        line-height: 1.35;
+      }
+
+      .contact-intro {
+        margin-block-end: 24px;
+        color: var(--muted);
+      }
+
+      .contact-grid {
+        display: grid;
+        gap: 10px;
+        margin-block-start: auto;
+      }
+
+      .contact-link {
+        position: relative;
+        display: grid;
+        align-content: center;
+        min-height: 72px;
+        padding: 13px 16px;
+        border: 1px solid #d4ddd5;
+        border-radius: var(--radius-sm);
+        background: var(--surface);
+        color: var(--green-950);
+        text-decoration: none;
+      }
+
+      .contact-link:hover {
+        border-color: var(--green-700);
+        background: #fbfdfb;
+      }
+
+      .contact-link:focus-visible {
+        outline-color: var(--green-950);
+        box-shadow: 0 0 0 5px rgba(227, 173, 69, 0.34);
+      }
+
+      .contact-label,
+      .contact-value {
+        display: block;
+      }
+
+      .contact-label {
+        color: var(--green-800);
+        font-size: 0.82rem;
+        font-weight: 800;
+      }
+
+      .contact-value {
+        margin-block-start: 2px;
+        color: #45564d;
+        direction: ltr;
+        font-family: "Segoe UI", Arial, sans-serif;
+        font-size: 0.86rem;
+        text-align: left;
+        unicode-bidi: isolate;
+        overflow-wrap: anywhere;
+      }
+
+      .final-section {
+        padding-block-start: 0;
+      }
+
+      .final-card {
+        position: relative;
+        display: grid;
+        grid-template-columns: 1.25fr 0.75fr;
+        gap: 34px;
+        align-items: center;
+        padding: clamp(30px, 6vw, 64px);
+        overflow: hidden;
+        border: 0;
+        border-radius: var(--radius-lg);
+        background: var(--amber-soft);
+      }
+
+      .final-card::after {
+        content: "";
+        position: absolute;
+        width: 190px;
+        height: 190px;
+        inset-block-end: -105px;
+        inset-inline-start: -50px;
+        border-radius: 50%;
+        border: 34px solid rgba(227, 173, 69, 0.25);
+      }
+
+      .final-card h2 {
+        margin-block-end: 12px;
+        font-size: clamp(1.8rem, 4vw, 3rem);
+        line-height: 1.3;
+      }
+
+      .final-card p {
+        margin-block-end: 0;
+        color: #645a42;
+      }
+
+      .final-stamp {
+        position: relative;
+        z-index: 1;
+        justify-self: end;
+        padding: 20px 24px;
+        border: 2px solid var(--green-800);
+        border-radius: 18px;
+        color: var(--green-800);
+        text-align: center;
+        transform: rotate(-2deg);
+      }
+
+      .final-stamp strong,
+      .final-stamp span {
+        display: block;
+      }
+
+      .final-stamp strong {
+        font-size: 1.15rem;
+      }
+
+      .final-stamp span {
+        margin-block-start: 3px;
+        font-size: 0.77rem;
+      }
+
+      footer {
+        padding-block: 34px 46px;
+        color: var(--muted);
+        text-align: center;
+        font-size: 0.85rem;
+      }
+
+      footer .brand {
+        margin-block-end: 4px;
+        color: var(--green-950);
+        font-size: 1rem;
+      }
+
+      footer p {
+        margin: 0;
+      }
+
+      .footer-contacts {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin-block-start: 18px;
+      }
+
+      .footer-contact {
+        display: inline-grid;
+        width: 40px;
+        height: 40px;
+        place-items: center;
+        border: 1px solid var(--line);
+        border-radius: 50%;
+        background: var(--surface);
+        color: var(--green-800);
+        text-decoration: none;
+        transition: border-color 160ms ease, color 160ms ease, transform 160ms ease;
+      }
+
+      .footer-contact:hover {
+        border-color: var(--green-700);
+        color: var(--green-950);
+        transform: translateY(-2px);
+      }
+
+      .footer-contact:focus-visible {
+        outline: 3px solid var(--amber);
+        outline-offset: 3px;
+      }
+
+      .footer-contact svg {
+        width: 19px;
+        height: 19px;
+        fill: currentColor;
+      }
+
+      @media (max-width: 860px) {
+        .hero-grid,
+        .phone-grid,
+        .final-card,
+        .creator-card {
+          grid-template-columns: 1fr;
+        }
+
+        .hero {
+          padding-block-end: 54px;
+        }
+
+        .topbar {
+          padding-block-end: 42px;
+        }
+
+        .truth-card {
+          max-width: 590px;
+        }
+
+        .problem-grid,
+        .capability-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .metrics,
+        .tech-grid {
+          grid-template-columns: 1fr 1fr;
+        }
+
+        .desktop-gallery {
+          grid-template-columns: 1fr;
+        }
+
+        .phone-grid {
+          gap: 25px;
+        }
+
+        .phone-copy {
+          max-width: 720px;
+        }
+
+        .phone-visual {
+          min-height: 650px;
+        }
+
+        .final-stamp {
+          justify-self: start;
+        }
+
+        .contact-grid {
+          grid-template-columns: 1fr 1fr;
+          margin-block-start: 0;
+        }
+      }
+
+      @media (max-width: 580px) {
+        .wrap {
+          width: min(calc(100% - 28px), var(--max));
+        }
+
+        .topbar {
+          align-items: flex-start;
+          flex-direction: column;
+          gap: 8px;
+        }
+
+        h1 {
+          font-size: clamp(2.35rem, 13vw, 3.6rem);
+        }
+
+        .device-state,
+        .metrics,
+        .tech-grid,
+        .contact-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .story-number {
+          margin-block-end: 32px;
+        }
+
+        .local-alert {
+          grid-template-columns: 1fr;
+          padding: 22px;
+        }
+
+        .figure-card figcaption {
+          align-items: flex-start;
+        }
+
+        .phone-visual {
+          min-height: 600px;
+        }
+
+        .phone-frame {
+          width: min(285px, 80vw);
+        }
+
+        .creator-profile,
+        .contact-panel {
+          padding: 25px 22px;
+          border-radius: var(--radius-md);
+        }
+
+        .download-actions,
+        .download-guidance {
+          grid-template-columns: 1fr;
+        }
+
+        .download-panel {
+          padding: 22px 18px;
+          border-radius: var(--radius-md);
+        }
+
+        .release-links {
+          align-items: stretch;
+          flex-direction: column;
+          gap: 10px;
+        }
+
+        .release-link {
+          display: block;
+          padding-block: 5px;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        html {
+          scroll-behavior: auto;
+        }
+      }
+
+      @media print {
+        body {
+          background: #fff;
+        }
+
+        .hero,
+        .gallery-section {
+          print-color-adjust: exact;
+          -webkit-print-color-adjust: exact;
+        }
+
+        .section {
+          break-inside: avoid;
+        }
+      }
+    </style>
+  <style data-local-fonts="noto">
+@font-face{font-family:"Noto Naskh Arabic";font-style:normal;font-weight:400;font-display:swap;src:url("assets/fonts/noto-naskh-arabic-400-arabic.woff2") format("woff2");unicode-range:U+0600-06FF,U+0750-077F,U+0870-088E,U+0890-0891,U+0897-08E1,U+08E3-08FF,U+200C-200E,U+2010-2011,U+204F,U+2E41,U+FB50-FDFF,U+FE70-FE74,U+FE76-FEFC,U+102E0-102FB,U+10E60-10E7E,U+10EC2-10EC4,U+10EFC-10EFF,U+1EE00-1EE03,U+1EE05-1EE1F,U+1EE21-1EE22,U+1EE24,U+1EE27,U+1EE29-1EE32,U+1EE34-1EE37,U+1EE39,U+1EE3B,U+1EE42,U+1EE47,U+1EE49,U+1EE4B,U+1EE4D-1EE4F,U+1EE51-1EE52,U+1EE54,U+1EE57,U+1EE59,U+1EE5B,U+1EE5D,U+1EE5F,U+1EE61-1EE62,U+1EE64,U+1EE67-1EE6A,U+1EE6C-1EE72,U+1EE74-1EE77,U+1EE79-1EE7C,U+1EE7E,U+1EE80-1EE89,U+1EE8B-1EE9B,U+1EEA1-1EEA3,U+1EEA5-1EEA9,U+1EEAB-1EEBB,U+1EEF0-1EEF1}
+@font-face{font-family:"Noto Naskh Arabic";font-style:normal;font-weight:400;font-display:swap;src:url("assets/fonts/noto-naskh-arabic-400-latin.woff2") format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"Noto Naskh Arabic";font-style:normal;font-weight:700;font-display:swap;src:url("assets/fonts/noto-naskh-arabic-700-arabic.woff2") format("woff2");unicode-range:U+0600-06FF,U+0750-077F,U+0870-088E,U+0890-0891,U+0897-08E1,U+08E3-08FF,U+200C-200E,U+2010-2011,U+204F,U+2E41,U+FB50-FDFF,U+FE70-FE74,U+FE76-FEFC,U+102E0-102FB,U+10E60-10E7E,U+10EC2-10EC4,U+10EFC-10EFF,U+1EE00-1EE03,U+1EE05-1EE1F,U+1EE21-1EE22,U+1EE24,U+1EE27,U+1EE29-1EE32,U+1EE34-1EE37,U+1EE39,U+1EE3B,U+1EE42,U+1EE47,U+1EE49,U+1EE4B,U+1EE4D-1EE4F,U+1EE51-1EE52,U+1EE54,U+1EE57,U+1EE59,U+1EE5B,U+1EE5D,U+1EE5F,U+1EE61-1EE62,U+1EE64,U+1EE67-1EE6A,U+1EE6C-1EE72,U+1EE74-1EE77,U+1EE79-1EE7C,U+1EE7E,U+1EE80-1EE89,U+1EE8B-1EE9B,U+1EEA1-1EEA3,U+1EEA5-1EEA9,U+1EEAB-1EEBB,U+1EEF0-1EEF1}
+@font-face{font-family:"Noto Naskh Arabic";font-style:normal;font-weight:700;font-display:swap;src:url("assets/fonts/noto-naskh-arabic-700-latin.woff2") format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"Noto Serif";font-style:normal;font-weight:400;font-display:swap;src:url("assets/fonts/noto-serif-400-latin.woff2") format("woff2")}
+@font-face{font-family:"Noto Serif";font-style:normal;font-weight:700;font-display:swap;src:url("assets/fonts/noto-serif-700-latin.woff2") format("woff2")}
+html[lang="ar"] body{font-family:"Noto Naskh Arabic",Tahoma,serif;font-size:17px;line-height:1.8}
+html[lang="en"] body{font-family:"Noto Serif",Georgia,serif;font-size:16px;line-height:1.68}
+html[lang="en"] h1,html[lang="en"] h2,html[lang="en"] h3{letter-spacing:-.02em}
+.topbar-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.language-toggle{min-height:40px;padding:7px 14px;border:1px solid rgba(255,255,255,.28);border-radius:999px;background:rgba(255,255,255,.08);color:#fff;font:inherit;font-weight:700;cursor:pointer}
+.language-toggle:hover{background:rgba(255,255,255,.16)}
+.language-toggle:focus-visible{outline:3px solid var(--amber);outline-offset:3px}
+.footer-contact.whatsapp-contact{display:inline-flex;width:auto;padding-inline:12px;gap:8px;border-radius:999px}
+.brand,.creator-mark,.creator-signature,.tech-item strong,.phone-number{font-family:"Noto Serif",Georgia,serif}
+.phone-number{direction:ltr;font-size:.82rem;unicode-bidi:isolate;white-space:nowrap}
+html[dir="ltr"] .creator-location{justify-content:flex-start}
+html[dir="ltr"] .creator-signature{justify-content:flex-start}
+@media(max-width:580px){.topbar{gap:14px}.topbar-actions{width:100%;justify-content:space-between}.language-toggle{min-width:92px}.footer-contacts{flex-wrap:wrap}}
+</style><link rel="icon" href="data:image/svg+xml,&lt;svg xmlns=&quot;http://www.w3.org/2000/svg&quot; viewBox=&quot;0 0 64 64&quot;&gt;&lt;rect width=&quot;64&quot; height=&quot;64&quot; rx=&quot;14&quot; fill=&quot;%230f3625&quot;/&gt;&lt;path d=&quot;M18 43c16 0 25-9 28-26-16 1-27 9-28 26Z&quot; fill=&quot;%23e3ad45&quot;/&gt;&lt;/svg&gt;"><script>try{const v=localStorage.getItem('agribudgetLanguage');const l=v==='ar'||v==='en'?v:((navigator.language||'').toLowerCase().startsWith('ar')?'ar':'en');document.documentElement.lang=l;document.documentElement.dir=l==='ar'?'rtl':'ltr'}catch{}</script></head>
+  <body>
+    <a class="skip-link" href="#content" data-i18n="skip">Skip to content</a>
+
+    <header class="hero">
+      <div class="wrap">
+        <div class="topbar">
+          <div class="brand-lockup">
+            <div class="brand" lang="en" dir="ltr">AgriBudget</div>
+            <span class="creator-mark" lang="en" dir="ltr">MOHAFIZE</span>
+          </div>
+          <div class="topbar-actions"><div class="status-chip" data-i18n="headerStatus">Portfolio project</div><button type="button" class="language-toggle" aria-label="Show this page in Arabic" lang="ar" dir="rtl">العربية</button></div>
+        </div>
+
+        <div class="hero-grid">
+          <div>
+            <p class="eyebrow" data-i18n="finalVersion">Version 1.0</p>
+            <h1 data-i18n="heroTitle">A local income and expense tracker for small farms</h1>
+            <p class="hero-copy" data-i18n="heroCopy">AgriBudget runs locally on Android and Windows. It helps users record expenses and income, categorize expenses, review reports, track spending against a simple monthly budget, and organize records by production cycle.</p>
+            <div class="tag-list" aria-label="Key features" data-i18n-aria="featuresAria">
+              <span class="tag" data-i18n="bilingualInterface">Arabic and English interface</span>
+              <span class="tag" data-i18n="platformTag">Android and Windows</span>
+              <span class="tag" data-i18n="storageTitle">Local data on each device</span>
+            </div>
+          </div>
+
+          <aside class="truth-card" aria-label="Local data storage" data-i18n-aria="storageAria">
+            <p class="eyebrow" data-i18n="storageEyebrow">How data is stored</p>
+            <h2 data-i18n="storageTitle">Local data on each device</h2>
+            <p data-i18n="storageCopy">Data is stored locally and independently on each Android phone or Windows computer. Each device has its own records, and data is not synchronized between devices.</p>
+            <div class="device-state">
+              <div>
+                <span data-i18n="androidPhone">Android phone</span>
+              </div>
+              <div>
+                <span data-i18n="windowsComputer">Windows computer</span>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </header>
+
+    <main id="content" tabindex="-1">
+      <section class="section download-section" aria-labelledby="download-title">
+        <div class="wrap">
+          <div class="section-heading">
+            <p class="eyebrow" data-i18n="downloadEyebrow">Download version 1.0</p>
+            <h2 id="download-title" data-i18n="downloadTitle">Choose your device</h2>
+            <p data-i18n="downloadIntro">Download the official AgriBudget 1.0 package for Android or Windows, then review the brief setup notes below.</p>
+          </div>
+
+          <div class="download-panel">
+            <div class="download-actions" aria-label="Application downloads" data-i18n-aria="downloadsAria">
+              <a class="download-button" href="https://github.com/mohafize/agribudget-releases/releases/download/v1.0.0/AgriBudget-1.0-Android-universal.apk" aria-label="Download AgriBudget 1.0 for Android as an APK file" data-i18n-aria="androidDownloadAria">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.6 9.48 19.44 6.3a.75.75 0 0 0-1.3-.75l-1.88 3.26A11.2 11.2 0 0 0 12 8c-1.52 0-2.97.3-4.26.81L5.86 5.55a.75.75 0 1 0-1.3.75L6.4 9.48A7.96 7.96 0 0 0 3 16h18a7.96 7.96 0 0 0-3.4-6.52ZM8 13.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2Zm8 0a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>
+                <span data-i18n="downloadAndroid">Download for Android</span>
+              </a>
+              <a class="download-button" href="https://github.com/mohafize/agribudget-releases/releases/download/v1.0.0/AgriBudget-1.0-Windows-x64-portable.zip" aria-label="Download AgriBudget 1.0 portable package for 64-bit Windows as a ZIP file" data-i18n-aria="windowsDownloadAria">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5.1 10.35 4v7.1H3V5.1Zm8.35-1.25L21 2.4v8.7h-9.65V3.85ZM3 12.1h7.35v7.1L3 18.1v-6Zm8.35 0H21v8.7l-9.65-1.45V12.1Z"></path></svg>
+                <span data-i18n="downloadWindows">Download for Windows</span>
+              </a>
+            </div>
+
+            <nav class="release-links" aria-label="Release resources" data-i18n-aria="releaseResourcesAria">
+              <a class="release-link" href="https://github.com/mohafize/agribudget-releases/releases/tag/v1.0.0" target="_blank" rel="noopener noreferrer" aria-label="View AgriBudget 1.0 release details; opens in a new window" data-i18n-aria="releaseDetailsAria" data-i18n="releaseDetails">Release details</a>
+              <a class="release-link" href="https://github.com/mohafize/agribudget-releases/releases/download/v1.0.0/CHECKSUMS-SHA256.txt" target="_blank" rel="noopener noreferrer" aria-label="Open the SHA-256 checksum file to verify file integrity; opens in a new window" data-i18n-aria="verifyIntegrityAria" data-i18n="verifyIntegrity">Verify file integrity</a>
+              <a class="release-link" href="https://github.com/mohafize/agribudget-releases" target="_blank" rel="noopener noreferrer" aria-label="Open instructions, privacy information, and licenses; opens in a new window" data-i18n-aria="documentationAria" data-i18n="documentation">Instructions, privacy, and licenses</a>
+            </nav>
+
+            <div class="download-guidance">
+              <article class="guidance-card">
+                <h3 data-i18n="androidGuideTitle">Before installing on Android</h3>
+                <ul>
+                  <li data-i18n="androidGuideDirect">This is a direct download, not a store release.</li>
+                  <li data-i18n="androidGuidePermission">Android may ask you to allow installation from this source.</li>
+                  <li data-i18n="androidGuideCompatibility">On devices with 16 KB memory pages, the app uses Android's official compatibility mode.</li>
+                </ul>
+              </article>
+              <article class="guidance-card">
+                <h3 data-i18n="windowsGuideTitle">Before running on Windows</h3>
+                <ul>
+                  <li data-i18n="windowsGuidePortable">This is a portable package; extract the entire ZIP file before running the app.</li>
+                  <li data-i18n="windowsGuideUnsigned">The app is not digitally signed, so Windows may show an unknown publisher or system protection warning.</li>
+                </ul>
+              </article>
+            </div>
+
+            <p class="download-note" role="note" data-i18n="downloadNote">Data stays local and separate on each device; there is no synchronization between phone and computer. The checksum file is provided for anyone who wants to confirm that a download has not changed or become corrupted.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="wrap">
+          <div class="section-heading">
+            <p class="eyebrow" data-i18n="problemEyebrow">Problem and Solution</p>
+            <h2 data-i18n="problemTitle">Organized records instead of scattered notes</h2>
+          </div>
+
+          <div class="problem-grid">
+            <article class="story-card">
+              <span class="story-number" aria-hidden="true">01</span>
+              <h3 data-i18n="problemLabel">The Problem</h3>
+              <p data-i18n="problemCopy">Expenses for labor, fuel, fertilizer, and purchases, along with income, can be scattered across papers and handwritten notes, making them difficult to find and review.</p>
+            </article>
+
+            <article class="story-card">
+              <span class="story-number" aria-hidden="true">02</span>
+              <h3 data-i18n="solutionLabel">The Solution</h3>
+              <p data-i18n="solutionCopy">AgriBudget brings expenses and income into an organized set of searchable, editable records. It uses those records to generate reports, summarize operating profit or loss, and provide a financial summary for each production cycle, making it easier to track spending and review activity day to day on the same device.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section capabilities">
+        <div class="wrap">
+          <div class="section-heading">
+            <p class="eyebrow" data-i18n="scopeEyebrow">A clearly defined scope</p>
+            <h2 data-i18n="scopeTitle">Current features and scope</h2>
+            <p data-i18n="scopeCopy">The current version covers daily recordkeeping, basic analysis, and local data management, with clearly stated functional limits.</p>
+          </div>
+
+          <div class="capability-grid">
+            <article class="capability-card">
+              <h3 data-i18n="analysisTitle">Recording, tracking, and analysis</h3>
+              <ul class="clean-list">
+                <li data-i18n="feature1">Record expenses and income, categorize expenses, and search, filter, and edit records.</li>
+                <li data-i18n="feature2">Review reports on expenses, income, and expense categories, along with a summary of operating profit or loss.</li>
+                <li data-i18n="feature3">Track spending against a simple monthly budget with five predefined budget items.</li>
+                <li data-i18n="feature4">Organize records by production cycle and view a financial summary for each cycle.</li>
+                <li data-i18n="bilingualInterfaceSentence">Use the app interface in Arabic or English.</li>
+              </ul>
+            </article>
+
+            <article class="capability-card no">
+              <h3 data-i18n="limitsTitle">Data management and functional limits</h3>
+              <ul class="clean-list">
+                <li data-i18n="limit1">Export active expense and income records to a shareable tabular file.</li>
+                <li data-i18n="limit2">Create a backup copy of the app's database and restore it from a user-selected file.</li>
+                <li data-i18n="limit3">Use separate trash bins for expenses and income, with options to restore records or delete them permanently. Records that remain in the trash become eligible for removal after 30 days and are removed during a later cleanup cycle.</li>
+                <li data-i18n="limit4">Choose the currency symbol shown in the app. This changes the display only and does not convert values from one currency to another.</li>
+                <li data-i18n="limit5">Use the app locally on Android and Windows, with records stored independently on each device and no synchronization between devices.</li>
+              </ul>
+            </article>
+          </div>
+
+          <div class="local-alert" role="note" aria-label="Export and backup explained" data-i18n-aria="exportAria">
+            <div class="alert-mark" aria-hidden="true">•</div>
+            <div>
+              <strong data-i18n="exportTitle">Export and backup are different functions</strong>
+              <span data-i18n="exportCopy">Export creates a tabular file containing active expense and income records. Backup creates a copy of the app's database that can later be restored from a file selected by the user.</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="wrap">
+          <div class="section-heading">
+            <p class="eyebrow" data-i18n="valueEyebrow">Product value and implementation</p>
+            <h2 data-i18n="valueTitle">Practical income and expense tracking, from record entry to data restoration</h2>
+            <p data-i18n="valueCopy">AgriBudget 1.0 combines reporting, spending tracking through a simple monthly budget with five predefined budget items, and records organized by production cycle. It also supports exporting active expense and income records, creating a backup copy of the app's database, and restoring the database from a user-selected backup file.</p>
+          </div>
+
+          <div class="metrics" aria-label="Project milestones" data-i18n-aria="milestonesAria">
+            <div class="metric">
+              <strong>38 / 38</strong>
+              <span data-i18n="testsLabel">Automated tests passed for version 1.0</span>
+            </div>
+            <div class="metric">
+              <strong>1.0</strong>
+              <span data-i18n="finalVersion">Version 1.0</span>
+            </div>
+            <div class="metric">
+              <strong>2</strong>
+              <span data-i18n="platformsLabel">Supported platforms</span>
+            </div>
+          </div>
+
+          <div class="tech-grid" aria-label="Technologies and platforms" data-i18n-aria="techAria">
+            <div class="tech-item">
+              <span data-i18n="framework">Framework</span>
+              <strong lang="en" dir="ltr">.NET MAUI</strong>
+            </div>
+            <div class="tech-item">
+              <span data-i18n="database">Local database</span>
+              <strong lang="en" dir="ltr">SQLite</strong>
+            </div>
+            <div class="tech-item">
+              <span data-i18n="platforms">Platforms</span>
+              <strong lang="en" dir="ltr">Android · Windows</strong>
+            </div>
+          </div>
+
+          <p class="achievement-note" data-i18n="techCopy">The implementation supports Android and Windows and uses a local SQLite database. It handles right-to-left and left-to-right layouts and accommodates long numeric values. The completed portfolio project is version 1.0.</p>
+        </div>
+      </section>
+
+      <section class="section gallery-section">
+        <div class="wrap">
+          <div class="section-heading">
+            <p class="eyebrow" data-i18n="desktopEyebrow">Desktop interface</p>
+            <h2 data-i18n="desktopTitle">Overview, entry, and records</h2>
+            <p data-i18n="desktopCopy">These three screenshots show key screens from the Arabic desktop interface. The displayed values are sample data used for demonstration.</p>
+          </div>
+
+          <div class="desktop-gallery">
+            <figure class="figure-card">
+              <div class="shot-shell">
+                <img src="assets/dashboard-ar.png" alt="Arabic-language desktop dashboard showing amounts for income, expenses, and the net operating result." width="1920" height="1020" data-i18n-alt="dashboardAlt" data-shot="dashboard">
+              </div>
+              <figcaption>
+                <div>
+                  <strong data-i18n="dashboard">Dashboard</strong>
+                  <span data-i18n="dashboardCopy">Operating profit or loss at a glance, alongside expenses and income</span>
+                </div>
+                <span class="figure-index" aria-hidden="true">01</span>
+              </figcaption>
+            </figure>
+
+            <figure class="figure-card">
+              <div class="shot-shell">
+                <img src="assets/add-expense-ar.png" alt="Arabic-language desktop form for adding a new expense, with fields for the amount, date, and category." width="1920" height="1020" data-i18n-alt="expenseAlt" data-shot="addExpense">
+              </div>
+              <figcaption>
+                <div>
+                  <strong data-i18n="addExpense">Add an expense</strong>
+                  <span data-i18n="addExpenseCopy">Structured entry for daily records</span>
+                </div>
+                <span class="figure-index" aria-hidden="true">02</span>
+              </figcaption>
+            </figure>
+
+            <figure class="figure-card">
+              <div class="shot-shell">
+                <img src="assets/records-ar.png" alt="Arabic-language desktop expense list showing records, amounts, categories, and notes." width="1920" height="1020" data-i18n-alt="recordsAlt" data-shot="records">
+              </div>
+              <figcaption>
+                <div>
+                  <strong data-i18n="records">Records list</strong>
+                  <span data-i18n="recordsCopy">Review expenses and their categories</span>
+                </div>
+                <span class="figure-index" aria-hidden="true">03</span>
+              </figcaption>
+            </figure>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="wrap phone-grid">
+          <div class="phone-copy">
+            <p class="eyebrow" data-i18n="mobileEyebrow">Mobile interface</p>
+            <h2 data-i18n="mobileTitle">Add an expense on mobile</h2>
+            <p data-i18n="mobileCopy">The Android version shows a clear Arabic form for adding an expense, with fields for the amount, date, category, production cycle, and notes, suited to daily entry while working.</p>
+            <div class="phone-note" data-i18n="mobileNote">A screenshot of the Android app's Arabic interface. The displayed values are sample data used for demonstration.</div>
+          </div>
+
+          <div class="phone-visual">
+            <div class="phone-frame">
+              <img src="assets/phone-add-expense-ar.png" alt="Arabic-language Android form for adding a new expense, with fields for the amount, date, category, production cycle, and notes." width="1440" height="2998" data-i18n-alt="phoneAlt" data-shot="phoneAddExpense">
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section final-section">
+        <div class="wrap">
+          <div class="final-card">
+            <div>
+              <p class="eyebrow" data-i18n="finalEyebrow">Final status</p>
+              <h2 data-i18n="finalTitle">Completed as a portfolio project</h2>
+              <p data-i18n="finalCopy">AgriBudget 1.0 is complete as a portfolio project. It provides a practical way to record and review expenses and income through reports, a simple monthly budget, and production cycles. It also supports exporting active expense and income records, creating a backup copy of the app's database, and restoring the database from a user-selected backup file.</p>
+            </div>
+            <div class="final-stamp" aria-label="Project status" data-i18n-aria="statusAria">
+              <strong data-i18n="finalVersion">Version 1.0</strong>
+              <span data-i18n="finalStamp">Completed portfolio project</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section creator-section" aria-labelledby="creator-title" data-i18n-aria="creatorAboutAria" aria-label="About the creator of AgriBudget">
+        <div class="wrap">
+          <div class="section-heading">
+            <p class="eyebrow" data-i18n="creatorEyebrow">Project creator</p>
+            <h2 id="creator-title" data-i18n="creatorTitle">About the creator of AgriBudget</h2>
+            <p data-i18n="creatorIntro">A brief introduction to the experience behind the project.</p>
+          </div>
+
+          <div class="creator-card">
+            <article class="creator-profile">
+              <p class="creator-signature" lang="en" dir="ltr">MOHAFIZE</p>
+
+              <div class="creator-copy">
+                <h3 data-i18n="creatorName">Mohamedelhafiz Elhussein Mohamed Ismail</h3>
+                <p class="creator-role" data-i18n="creatorRole">Agricultural Finance &amp; Operations Professional | Building Practical Software Tools</p>
+                <p class="creator-subtitle" data-i18n="creatorSubtitle">Creator of AgriBudget</p>
+                <p class="creator-bio" data-i18n="creatorBio">I am an agricultural finance and operations professional. I build practical software tools inspired by my experience in banking, agricultural finance, recordkeeping, collections, and field coordination.</p>
+                <p class="creator-location">
+                  <span data-i18n="location">Location</span>
+                  <bdi data-i18n="locationValue">Riyadh, Saudi Arabia</bdi>
+                </p>
+              </div>
+
+              
+            </article>
+
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="wrap">
+      <div class="brand" lang="en" dir="ltr">AgriBudget</div>
+      <p data-i18n="footerCopy">A portfolio showcase for AgriBudget.</p>
+      <nav class="footer-contacts" aria-label="Contact links" data-i18n-aria="contactsAria">
+        <a class="footer-contact" href="mailto:mohafize@outlook.com" aria-label="Send an email to Mohamedelhafiz" data-i18n-aria="emailAria">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2Zm0 4-8 5-8-5V6l8 5 8-5v2Z"></path></svg>
+        </a>
+        <a class="footer-contact whatsapp-contact" href="https://wa.me/966536038987" target="_blank" rel="noopener noreferrer" aria-label="Contact Mohamedelhafiz on WhatsApp; opens in a new window" data-i18n-aria="whatsappAria">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.04 2a9.84 9.84 0 0 0-8.45 14.88L2 22l5.25-1.55A9.93 9.93 0 1 0 12.04 2Zm5.78 14.06c-.24.67-1.42 1.28-1.96 1.36-.5.08-1.14.12-1.84-.1-.43-.14-.98-.32-1.69-.62-2.97-1.28-4.91-4.27-5.06-4.47-.15-.2-1.21-1.61-1.21-3.07s.76-2.18 1.03-2.48c.27-.3.6-.37.8-.37h.57c.18 0 .43-.07.67.51.24.59.82 2.01.89 2.16.07.15.12.32.02.52-.1.2-.15.32-.3.49-.15.17-.31.38-.45.51-.15.15-.3.31-.13.61.17.3.75 1.24 1.62 2 .88.78 1.63 1.03 1.92 1.18.3.15.47.12.64-.08.17-.2.74-.86.94-1.16.2-.3.4-.25.67-.15.27.1 1.73.82 2.03.96.3.15.49.22.57.35.07.12.07.72-.17 1.39Z"></path></svg>
+        <span class="phone-number" aria-hidden="true">+966 53 603 8987</span></a>
+        <a class="footer-contact" href="https://www.linkedin.com/in/mohafize/" target="_blank" rel="noopener noreferrer" aria-label="Open Mohamedelhafiz's LinkedIn profile in a new window" data-i18n-aria="linkedinAria">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 8.25H3V21h3.5V8.25ZM4.75 3A2.04 2.04 0 1 0 4.75 7a2.04 2.04 0 0 0 0-4ZM21 13.7c0-3.84-2.05-5.63-4.78-5.63-2.2 0-3.19 1.21-3.74 2.06V8.25H9V21h3.48v-6.31c0-1.66.31-3.27 2.37-3.27 2.03 0 2.06 1.9 2.06 3.38V21H21v-7.3Z"></path></svg>
+        </a>
+        <a class="footer-contact" href="https://github.com/mohafize" target="_blank" rel="noopener noreferrer" aria-label="Open Mohamedelhafiz's GitHub profile in a new window" data-i18n-aria="githubAria">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.87c-2.78.61-3.37-1.18-3.37-1.18-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.9 1.53 2.35 1.09 2.92.83.09-.65.35-1.09.64-1.34-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.02A9.56 9.56 0 0 1 12 6.82c.85 0 1.69.11 2.48.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.37.2 2.39.1 2.64.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.86v2.77c0 .27.18.58.69.48A10 10 0 0 0 12 2Z"></path></svg>
+        </a>
+      </nav>
+    </footer>
+    
+  
+
+<script>
+(() => {
+  const strings = {"skip":{"ar":"انتقل إلى المحتوى","en":"Skip to content"},"headerStatus":{"ar":"مشروع محفظة أعمال","en":"Portfolio project"},"heroEyebrow":{"ar":"الإصدار ١٫٠","en":"Version 1.0"},"heroTitle":{"ar":"متتبع محلي للمصروفات والإيرادات للمزارع الصغيرة","en":"A local income and expense tracker for small farms"},"heroCopy":{"ar":"يعمل AgriBudget محليًا على Android وWindows. يساعد المستخدمين على تسجيل المصروفات والإيرادات، وتصنيف المصروفات، ومراجعة التقارير، ومتابعة الإنفاق مقابل ميزانية شهرية مبسطة، وتنظيم السجلات حسب الدورة الإنتاجية.","en":"AgriBudget runs locally on Android and Windows. It helps users record expenses and income, categorize expenses, review reports, track spending against a simple monthly budget, and organize records by production cycle."},"bilingualInterface":{"ar":"واجهة بالعربية والإنجليزية","en":"Arabic and English interface"},"bilingualInterfaceSentence":{"ar":"واجهة بالعربية والإنجليزية.","en":"Use the app interface in Arabic or English."},"platformTag":{"ar":"Android وWindows","en":"Android and Windows"},"localTag":{"ar":"بيانات محلية على كل جهاز","en":"Local data on each device"},"storageEyebrow":{"ar":"طريقة حفظ البيانات","en":"How data is stored"},"storageTitle":{"ar":"بيانات محلية على كل جهاز","en":"Local data on each device"},"storageCopy":{"ar":"تُحفظ البيانات محليًا وبصورة مستقلة على كل هاتف يعمل بنظام Android أو حاسب يعمل بنظام Windows. لكل جهاز سجلاته الخاصة، ولا تتم مزامنة البيانات بين الأجهزة.","en":"Data is stored locally and independently on each Android phone or Windows computer. Each device has its own records, and data is not synchronized between devices."},"androidPhone":{"ar":"هاتف Android","en":"Android phone"},"windowsComputer":{"ar":"حاسب Windows","en":"Windows computer"},"problemEyebrow":{"ar":"المشكلة والحل","en":"Problem and Solution"},"problemTitle":{"ar":"سجلات منظمة بدل الملاحظات المتناثرة","en":"Organized records instead of scattered notes"},"problemLabel":{"ar":"المشكلة","en":"The Problem"},"problemCopy":{"ar":"قد تتوزع مصروفات العمال والوقود والأسمدة والمشتريات، إلى جانب الإيرادات، بين الأوراق والملاحظات المكتوبة بخط اليد، مما يصعّب العثور عليها ومراجعتها.","en":"Expenses for labor, fuel, fertilizer, and purchases, along with income, can be scattered across papers and handwritten notes, making them difficult to find and review."},"solutionLabel":{"ar":"الحل","en":"The Solution"},"solutionCopy":{"ar":"يجمع AgriBudget المصروفات والإيرادات في مجموعة منظمة من السجلات القابلة للبحث والتحرير. ويستخدم هذه السجلات لإنشاء التقارير، وتلخيص الربح أو الخسارة التشغيلية، وتقديم ملخص مالي لكل دورة إنتاجية، مما يسهّل متابعة الإنفاق ومراجعة النشاط يوميًا على الجهاز نفسه.","en":"AgriBudget brings expenses and income into an organized set of searchable, editable records. It uses those records to generate reports, summarize operating profit or loss, and provide a financial summary for each production cycle, making it easier to track spending and review activity day to day on the same device."},"scopeEyebrow":{"ar":"نطاق محدد بوضوح","en":"A clearly defined scope"},"scopeTitle":{"ar":"ميزات النسخة الحالية ونطاقها","en":"Current features and scope"},"scopeCopy":{"ar":"تغطي النسخة الحالية حفظ السجلات اليومية والتحليل الأساسي وإدارة البيانات محليًا، مع توضيح الحدود الوظيفية.","en":"The current version covers daily recordkeeping, basic analysis, and local data management, with clearly stated functional limits."},"analysisTitle":{"ar":"التسجيل والمتابعة والتحليل","en":"Recording, tracking, and analysis"},"feature1":{"ar":"تسجيل المصروفات والإيرادات، وتصنيف المصروفات، والبحث في السجلات وتصفيتها وتعديلها.","en":"Record expenses and income, categorize expenses, and search, filter, and edit records."},"feature2":{"ar":"مراجعة تقارير المصروفات والإيرادات وتصنيفات المصروفات، إلى جانب ملخص للربح أو الخسارة التشغيلية.","en":"Review reports on expenses, income, and expense categories, along with a summary of operating profit or loss."},"feature3":{"ar":"متابعة الإنفاق مقابل ميزانية شهرية مبسطة تضم خمسة بنود ميزانية محددة مسبقًا.","en":"Track spending against a simple monthly budget with five predefined budget items."},"feature4":{"ar":"تنظيم السجلات حسب الدورة الإنتاجية وعرض ملخص مالي لكل دورة.","en":"Organize records by production cycle and view a financial summary for each cycle."},"limitsTitle":{"ar":"إدارة البيانات والحدود الوظيفية","en":"Data management and functional limits"},"limit1":{"ar":"تصدير سجلات المصروفات والإيرادات النشطة إلى ملف جدولي قابل للمشاركة.","en":"Export active expense and income records to a shareable tabular file."},"limit2":{"ar":"إنشاء نسخة احتياطية من قاعدة بيانات التطبيق واستعادتها من ملف يختاره المستخدم.","en":"Create a backup copy of the app's database and restore it from a user-selected file."},"limit3":{"ar":"استخدام سلتين منفصلتين للمحذوفات، إحداهما للمصروفات والأخرى للإيرادات، مع إمكانية استعادة السجلات أو حذفها نهائيًا. تصبح السجلات التي تبقى في سلة المحذوفات مؤهلة للإزالة بعد ٣٠ يومًا، وتُزال خلال دورة تنظيف لاحقة.","en":"Use separate trash bins for expenses and income, with options to restore records or delete them permanently. Records that remain in the trash become eligible for removal after 30 days and are removed during a later cleanup cycle."},"limit4":{"ar":"اختيار رمز العملة الظاهر في التطبيق. يغيّر ذلك طريقة العرض فقط ولا يحوّل القيم من عملة إلى أخرى.","en":"Choose the currency symbol shown in the app. This changes the display only and does not convert values from one currency to another."},"limit5":{"ar":"استخدام التطبيق محليًا على Android وWindows، مع تخزين السجلات بصورة مستقلة على كل جهاز ودون مزامنة بين الأجهزة.","en":"Use the app locally on Android and Windows, with records stored independently on each device and no synchronization between devices."},"exportTitle":{"ar":"التصدير والنسخ الاحتياطي وظيفتان مختلفتان","en":"Export and backup are different functions"},"exportCopy":{"ar":"ينشئ التصدير ملفًا جدوليًا يحتوي على سجلات المصروفات والإيرادات النشطة. أما النسخ الاحتياطي فينشئ نسخة من قاعدة بيانات التطبيق يمكن استعادتها لاحقًا من ملف يختاره المستخدم.","en":"Export creates a tabular file containing active expense and income records. Backup creates a copy of the app's database that can later be restored from a file selected by the user."},"valueEyebrow":{"ar":"قيمة المنتج والتنفيذ","en":"Product value and implementation"},"valueTitle":{"ar":"متابعة عملية للمصروفات والإيرادات، من إدخال السجلات إلى استعادة البيانات","en":"Practical income and expense tracking, from record entry to data restoration"},"valueCopy":{"ar":"يجمع AgriBudget 1.0 بين التقارير، ومتابعة الإنفاق من خلال ميزانية شهرية مبسطة تضم خمسة بنود ميزانية محددة مسبقًا، وتنظيم السجلات حسب الدورة الإنتاجية. كما يدعم تصدير سجلات المصروفات والإيرادات النشطة، وإنشاء نسخة احتياطية من قاعدة بيانات التطبيق، واستعادة قاعدة البيانات من ملف نسخة احتياطية يختاره المستخدم.","en":"AgriBudget 1.0 combines reporting, spending tracking through a simple monthly budget with five predefined budget items, and records organized by production cycle. It also supports exporting active expense and income records, creating a backup copy of the app's database, and restoring the database from a user-selected backup file."},"testsLabel":{"ar":"اجتاز الإصدار ١٫٠ جميع الاختبارات الآلية","en":"Automated tests passed for version 1.0"},"versionLabel":{"ar":"الإصدار ١٫٠","en":"Version 1.0"},"platformsLabel":{"ar":"منصتان مدعومتان","en":"Supported platforms"},"framework":{"ar":"إطار العمل","en":"Framework"},"database":{"ar":"قاعدة البيانات المحلية","en":"Local database"},"platforms":{"ar":"المنصات","en":"Platforms"},"techCopy":{"ar":"يدعم التنفيذ Android وWindows ويستخدم قاعدة بيانات SQLite محلية. ويتعامل مع تخطيطات الاتجاه من اليمين إلى اليسار ومن اليسار إلى اليمين، ويستوعب القيم الرقمية الطويلة. مشروع محفظة الأعمال المكتمل هو الإصدار ١٫٠.","en":"The implementation supports Android and Windows and uses a local SQLite database. It handles right-to-left and left-to-right layouts and accommodates long numeric values. The completed portfolio project is version 1.0."},"desktopEyebrow":{"ar":"واجهة الحاسب","en":"Desktop interface"},"desktopTitle":{"ar":"الملخص والإدخال والسجلات","en":"Overview, entry, and records"},"desktopCopy":{"ar":"تعرض هذه اللقطات الثلاث شاشات أساسية من واجهة الحاسب العربية. القيم الظاهرة بيانات نموذجية مستخدمة لأغراض العرض.","en":"These three screenshots show key screens from the Arabic desktop interface. The displayed values are sample data used for demonstration."},"dashboard":{"ar":"لوحة المعلومات","en":"Dashboard"},"dashboardCopy":{"ar":"الربح أو الخسارة التشغيلية في لمحة، إلى جانب المصروفات والإيرادات","en":"Operating profit or loss at a glance, alongside expenses and income"},"addExpense":{"ar":"إضافة مصروف","en":"Add an expense"},"addExpenseCopy":{"ar":"إدخال منظم للسجلات اليومية","en":"Structured entry for daily records"},"records":{"ar":"قائمة السجلات","en":"Records list"},"recordsCopy":{"ar":"مراجعة المصروفات وتصنيفاتها","en":"Review expenses and their categories"},"mobileEyebrow":{"ar":"واجهة الهاتف","en":"Mobile interface"},"mobileTitle":{"ar":"إضافة مصروف على الهاتف","en":"Add an expense on mobile"},"mobileCopy":{"ar":"تعرض نسخة Android نموذجًا عربيًا واضحًا لإضافة مصروف، مع حقول للمبلغ والتاريخ والتصنيف والدورة الإنتاجية والملاحظات، بما يناسب الإدخال اليومي أثناء العمل.","en":"The Android version shows a clear Arabic form for adding an expense, with fields for the amount, date, category, production cycle, and notes, suited to daily entry while working."},"mobileNote":{"ar":"لقطة شاشة لواجهة تطبيق Android العربية. القيم الظاهرة بيانات نموذجية مستخدمة لأغراض العرض.","en":"A screenshot of the Android app's Arabic interface. The displayed values are sample data used for demonstration."},"finalEyebrow":{"ar":"الحالة النهائية","en":"Final status"},"finalTitle":{"ar":"مكتمل كمشروع محفظة أعمال","en":"Completed as a portfolio project"},"finalCopy":{"ar":"اكتمل AgriBudget 1.0 بوصفه مشروع محفظة أعمال. ويوفر طريقة عملية لتسجيل المصروفات والإيرادات ومراجعتها من خلال التقارير والميزانية الشهرية المبسطة والدورات الإنتاجية. كما يدعم تصدير سجلات المصروفات والإيرادات النشطة، وإنشاء نسخة احتياطية من قاعدة بيانات التطبيق، واستعادة قاعدة البيانات من ملف نسخة احتياطية يختاره المستخدم.","en":"AgriBudget 1.0 is complete as a portfolio project. It provides a practical way to record and review expenses and income through reports, a simple monthly budget, and production cycles. It also supports exporting active expense and income records, creating a backup copy of the app's database, and restoring the database from a user-selected backup file."},"finalVersion":{"ar":"الإصدار ١٫٠","en":"Version 1.0"},"finalStamp":{"ar":"مشروع محفظة أعمال مكتمل","en":"Completed portfolio project"},"creatorEyebrow":{"ar":"منشئ المشروع","en":"Project creator"},"creatorIntro":{"ar":"تعريف موجز بالخبرة التي تقف وراء المشروع.","en":"A brief introduction to the experience behind the project."},"creatorName":{"ar":"محمد الحافظ الحسين محمد إسماعيل","en":"Mohamedelhafiz Elhussein Mohamed Ismail"},"creatorRole":{"ar":"مهني في التمويل الزراعي والعمليات | أبني أدوات برمجية عملية","en":"Agricultural Finance & Operations Professional | Building Practical Software Tools"},"creatorBio":{"ar":"أنا مهني في التمويل الزراعي والعمليات. أبني أدوات برمجية عملية مستوحاة من خبرتي في العمل المصرفي والتمويل الزراعي وإدارة السجلات والتحصيل والمتابعة الميدانية.","en":"I am an agricultural finance and operations professional. I build practical software tools inspired by my experience in banking, agricultural finance, recordkeeping, collections, and field coordination."},"location":{"ar":"الموقع","en":"Location"},"locationValue":{"ar":"الرياض، المملكة العربية السعودية","en":"Riyadh, Saudi Arabia"},"footerCopy":{"ar":"صفحة عرض لمشروع AgriBudget ضمن محفظة الأعمال.","en":"A portfolio showcase for AgriBudget."},"featuresAria":{"ar":"الميزات الرئيسية","en":"Key features"},"storageAria":{"ar":"تخزين البيانات محليًا","en":"Local data storage"},"exportAria":{"ar":"شرح التصدير والنسخ الاحتياطي","en":"Export and backup explained"},"milestonesAria":{"ar":"مؤشرات الإنجاز","en":"Project milestones"},"techAria":{"ar":"التقنيات والمنصات","en":"Technologies and platforms"},"statusAria":{"ar":"حالة المشروع","en":"Project status"},"contactsAria":{"ar":"روابط التواصل","en":"Contact links"},"emailAria":{"ar":"إرسال بريد إلكتروني إلى محمد الحافظ","en":"Send an email to Mohamedelhafiz"},"whatsappAria":{"ar":"التواصل مع محمد الحافظ عبر واتساب؛ يفتح في نافذة جديدة","en":"Contact Mohamedelhafiz on WhatsApp; opens in a new window"},"linkedinAria":{"ar":"فتح ملف محمد الحافظ على لينكدإن في نافذة جديدة","en":"Open Mohamedelhafiz's LinkedIn profile in a new window"},"githubAria":{"ar":"فتح حساب محمد الحافظ على GitHub في نافذة جديدة","en":"Open Mohamedelhafiz's GitHub profile in a new window"},"dashboardAlt":{"ar":"لوحة معلومات عربية على الحاسب تعرض مبالغ الإيرادات والمصروفات وصافي النتيجة التشغيلية.","en":"Arabic-language desktop dashboard showing amounts for income, expenses, and the net operating result."},"expenseAlt":{"ar":"نموذج عربي على الحاسب لإضافة مصروف جديد، مع حقول للمبلغ والتاريخ والتصنيف.","en":"Arabic-language desktop form for adding a new expense, with fields for the amount, date, and category."},"recordsAlt":{"ar":"قائمة مصروفات عربية على الحاسب تعرض السجلات والمبالغ والتصنيفات والملاحظات.","en":"Arabic-language desktop expense list showing records, amounts, categories, and notes."},"phoneAlt":{"ar":"نموذج عربي على تطبيق Android لإضافة مصروف جديد، مع حقول للمبلغ والتاريخ والتصنيف والدورة الإنتاجية والملاحظات.","en":"Arabic-language Android form for adding a new expense, with fields for the amount, date, category, production cycle, and notes."},"creatorTitle":{"ar":"عن منشئ AgriBudget","en":"About the creator of AgriBudget"},"creatorSubtitle":{"ar":"منشئ AgriBudget","en":"Creator of AgriBudget"},"creatorAboutAria":{"ar":"عن منشئ AgriBudget","en":"About the creator of AgriBudget"},"switchButton":{"ar":"English","en":"العربية"},"switchAria":{"ar":"عرض الصفحة باللغة الإنجليزية","en":"Show this page in Arabic"}};
+  Object.assign(strings, {
+    downloadEyebrow: { ar: 'تنزيل الإصدار ١٫٠', en: 'Download version 1.0' },
+    downloadTitle: { ar: 'اختر جهازك', en: 'Choose your device' },
+    downloadIntro: { ar: 'نزّل الحزمة الرسمية للإصدار ١٫٠ من AgriBudget لأندرويد أو ويندوز، ثم راجع إرشادات الإعداد المختصرة أدناه.', en: 'Download the official AgriBudget 1.0 package for Android or Windows, then review the brief setup notes below.' },
+    downloadAndroid: { ar: 'تنزيل لأندرويد', en: 'Download for Android' },
+    downloadWindows: { ar: 'تنزيل لويندوز', en: 'Download for Windows' },
+    releaseDetails: { ar: 'تفاصيل الإصدار', en: 'Release details' },
+    verifyIntegrity: { ar: 'التحقق من سلامة الملفات', en: 'Verify file integrity' },
+    documentation: { ar: 'تعليمات الاستخدام والخصوصية والرخص', en: 'Instructions, privacy, and licenses' },
+    androidGuideTitle: { ar: 'قبل التثبيت على أندرويد', en: 'Before installing on Android' },
+    androidGuideDirect: { ar: 'هذه نسخة تنزيل مباشر وليست إصدارًا عبر متجر.', en: 'This is a direct download, not a store release.' },
+    androidGuidePermission: { ar: 'قد يطلب أندرويد السماح بالتثبيت من هذا المصدر.', en: 'Android may ask you to allow installation from this source.' },
+    androidGuideCompatibility: { ar: 'على الأجهزة ذات صفحات الذاكرة بحجم ١٦ كيلوبايت، يستخدم التطبيق وضع التوافق الرسمي في أندرويد.', en: "On devices with 16 KB memory pages, the app uses Android's official compatibility mode." },
+    windowsGuideTitle: { ar: 'قبل التشغيل على ويندوز', en: 'Before running on Windows' },
+    windowsGuidePortable: { ar: 'هذه حزمة محمولة؛ فك ضغط الملف كاملًا قبل تشغيل التطبيق.', en: 'This is a portable package; extract the entire ZIP file before running the app.' },
+    windowsGuideUnsigned: { ar: 'التطبيق غير موقع رقميًا؛ لذلك قد يعرض ويندوز تحذير ناشر غير معروف أو تحذير حماية النظام.', en: 'The app is not digitally signed, so Windows may show an unknown publisher or system protection warning.' },
+    downloadNote: { ar: 'تبقى بيانات كل جهاز محلية ومستقلة، ولا توجد مزامنة بين الهاتف والحاسب. ملف البصمات مخصص لمن يريد التأكد من أن ملفات التنزيل لم تتغير أو تتلف.', en: 'Data stays local and separate on each device; there is no synchronization between phone and computer. The checksum file is provided for anyone who wants to confirm that a download has not changed or become corrupted.' },
+    downloadsAria: { ar: 'تنزيلات التطبيق', en: 'Application downloads' },
+    androidDownloadAria: { ar: 'تنزيل الإصدار ١٫٠ من AgriBudget لأندرويد بصيغة APK', en: 'Download AgriBudget 1.0 for Android as an APK file' },
+    windowsDownloadAria: { ar: 'تنزيل الحزمة المحمولة من الإصدار ١٫٠ من AgriBudget لويندوز ٦٤ بت بصيغة ZIP', en: 'Download AgriBudget 1.0 portable package for 64-bit Windows as a ZIP file' },
+    releaseResourcesAria: { ar: 'موارد الإصدار', en: 'Release resources' },
+    releaseDetailsAria: { ar: 'عرض تفاصيل الإصدار ١٫٠ من AgriBudget؛ يفتح في نافذة جديدة', en: 'View AgriBudget 1.0 release details; opens in a new window' },
+    verifyIntegrityAria: { ar: 'فتح ملف بصمات SHA-256 للتحقق من سلامة الملفات؛ يفتح في نافذة جديدة', en: 'Open the SHA-256 checksum file to verify file integrity; opens in a new window' },
+    documentationAria: { ar: 'فتح تعليمات الاستخدام ومعلومات الخصوصية والرخص؛ يفتح في نافذة جديدة', en: 'Open instructions, privacy information, and licenses; opens in a new window' }
+  });
+  const storageKey = 'agribudgetLanguage';
+  const galleryCopy = {
+    desktopCopy: {
+      ar: 'تعرض هذه اللقطات الثلاث شاشات أساسية من واجهة الحاسب العربية. القيم الظاهرة بيانات نموذجية مستخدمة لأغراض العرض.',
+      en: 'These three screenshots show key screens from the English desktop interface. The displayed values are sample data used for demonstration.'
+    },
+    mobileCopy: {
+      ar: 'تعرض نسخة Android نموذجًا عربيًا واضحًا لإضافة مصروف، مع حقول للمبلغ والتاريخ والتصنيف والدورة الإنتاجية والملاحظات، بما يناسب الإدخال اليومي أثناء العمل.',
+      en: 'The Android version shows a clear English form for adding an expense, with fields for the amount, date, category, production cycle, and notes, suited to daily entry while working.'
+    },
+    mobileNote: {
+      ar: 'لقطة شاشة لواجهة تطبيق Android العربية. القيم الظاهرة بيانات نموذجية مستخدمة لأغراض العرض.',
+      en: 'A screenshot of the Android app\'s English interface. The displayed values are sample data used for demonstration.'
+    },
+    dashboardAlt: {
+      ar: 'لوحة معلومات عربية على الحاسب تعرض مبالغ الإيرادات والمصروفات وصافي النتيجة التشغيلية.',
+      en: 'English-language desktop dashboard showing amounts for income, expenses, and the net operating result.'
+    },
+    expenseAlt: {
+      ar: 'نموذج عربي على الحاسب لإضافة مصروف جديد، مع حقول للمبلغ والتاريخ والتصنيف.',
+      en: 'English-language desktop form for adding a new expense, with fields for the amount, date, and category.'
+    },
+    recordsAlt: {
+      ar: 'قائمة مصروفات عربية على الحاسب تعرض السجلات والمبالغ والتصنيفات والملاحظات.',
+      en: 'English-language desktop expense list showing records, amounts, categories, and notes.'
+    },
+    phoneAlt: {
+      ar: 'نموذج عربي على تطبيق Android لإضافة مصروف جديد، مع حقول للمبلغ والتاريخ والتصنيف والدورة الإنتاجية والملاحظات.',
+      en: 'English-language Android form for adding a new expense, with fields for the amount, date, category, production cycle, and notes.'
+    }
+  };
+  const gallerySources = {
+    dashboard: { ar: 'assets/dashboard-ar.png', en: 'assets/dashboard-en.png' },
+    addExpense: { ar: 'assets/add-expense-ar.png', en: 'assets/add-expense-en.png' },
+    records: { ar: 'assets/records-ar.png', en: 'assets/records-en.png' },
+    phoneAddExpense: { ar: 'assets/phone-add-expense-ar.png', en: 'assets/phone-add-expense-en.png' }
+  };
+  const metaDescriptions = {
+    ar: 'استكشف AgriBudget، تطبيقًا لتتبع المصروفات والإيرادات للمزارع الصغيرة. تُحفظ البيانات محليًا وبصورة مستقلة على كل جهاز.',
+    en: 'Explore AgriBudget, an income and expense tracking app for small farms. Data is stored locally and independently on each device.'
+  };
+  const titles = {
+    ar: 'AgriBudget | متتبع المصروفات والإيرادات للمزارع الصغيرة',
+    en: 'AgriBudget | Income and Expense Tracker for Small Farms'
+  };
+  const readSaved = () => { try { const value = localStorage.getItem(storageKey); return value === 'ar' || value === 'en' ? value : null; } catch { return null; } };
+  const save = value => { try { localStorage.setItem(storageKey, value); } catch {} };
+  const applyLanguage = (language, persist = false) => {
+    const lang = language === 'ar' ? 'ar' : 'en';
+    document.documentElement.lang = lang;
+    document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+    document.title = titles[lang];
+    const meta = document.querySelector('meta[name="description"]');
+    if (meta) meta.content = metaDescriptions[lang];
+    document.querySelectorAll('[data-i18n]').forEach(element => {
+      const value = strings[element.dataset.i18n];
+      if (value) element.textContent = value[lang];
+    });
+    document.querySelectorAll('[data-i18n-aria]').forEach(element => {
+      const value = strings[element.dataset.i18nAria];
+      if (value) element.setAttribute('aria-label', value[lang]);
+    });
+    document.querySelectorAll('[data-i18n-alt]').forEach(element => {
+      const value = galleryCopy[element.dataset.i18nAlt] || strings[element.dataset.i18nAlt];
+      if (value) element.alt = value[lang];
+    });
+    Object.entries(galleryCopy).forEach(([key, value]) => {
+      document.querySelectorAll(`[data-i18n="${key}"]`).forEach(element => { element.textContent = value[lang]; });
+    });
+    document.querySelectorAll('[data-shot]').forEach(element => {
+      const value = gallerySources[element.dataset.shot];
+      if (value) element.src = value[lang];
+    });
+    const button = document.querySelector('.language-toggle');
+    if (button) {
+      button.textContent = strings.switchButton[lang];
+      button.setAttribute('aria-label', strings.switchAria[lang]);
+      button.setAttribute('lang', lang === 'ar' ? 'en' : 'ar');
+      button.setAttribute('dir', lang === 'ar' ? 'ltr' : 'rtl');
+    }
+    if (persist) save(lang);
+  };
+  const initial = readSaved() || ((navigator.language || '').toLowerCase().startsWith('ar') ? 'ar' : 'en');
+  applyLanguage(initial);
+  document.querySelector('.language-toggle')?.addEventListener('click', () => applyLanguage(document.documentElement.lang === 'ar' ? 'en' : 'ar', true));
+})();</script></body></html>
